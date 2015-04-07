@@ -6,6 +6,9 @@
 
 (in-package :ll)
 
+(defun rulep (x)
+    (and (symbolp x) (not (keywordp x))))
+
 (defun parse-try-each-production (alternatives grammar input tree)
     "Attempts to match each alternative in a production rule until one
      succeeds."
@@ -42,10 +45,10 @@
         ((nil ?) (declare (ignore ?)))
         (((g-head . g-rest) (i-head . i-rest))
              (cond
-               ((symbolp g-head) (parse-try-each-production (funcall g-head)
-                                                            (cons :split g-rest)
-                                                            input
-                                                            (add-nil tree)))
+               ((rulep g-head) (parse-try-each-production (funcall g-head)
+                                                          (cons :split g-rest)
+                                                          input
+                                                          (add-nil tree)))
               ((equal g-head i-head) (parse-impl g-rest i-rest (push-terminal i-head tree)))))))
 
 (defun parse (grammar input)
@@ -69,7 +72,7 @@
         ((nil ?) (declare (ignore ?)))
         (((g-head . g-rest) (i-head . i-rest))
              (cond
-              ((symbolp g-head) (match-try-each-production (funcall g-head) g-rest input))
+              ((rulep g-head) (match-try-each-production (funcall g-head) g-rest input))
               ((equal g-head i-head) (match g-rest i-rest))))))
 
 ;;; It's actually not too bad without cl-pattern but I prefer pattern matching
@@ -79,5 +82,5 @@
 ;;      ((and (null grammar) (null input)) t)
 ;;      ((or (null grammar) (null input)) nil)
 ;;      ((equal (car grammar) (car input)) (match (cdr grammar) (cdr input)))
-;;      ((typep (car grammar) 'symbol) (try-match (funcall (car grammar)) (cdr grammar) input))
+;;      ((rulep (car grammar)) (try-match (funcall (car grammar)) (cdr grammar) input))
 ;;      (t nil)))
